@@ -15,3 +15,7 @@
 7. For applying those to your satabase <code> py manage.py migrate </code>
 8. To start my server <code> python manage.py runserver </code>
 9. To view on browser http://127.0.0.1:8000/ [Local Host Address]
+
+### API
+1. Login: http://127.0.0.1:8000/api/login/
+2. Register: http://127.0.0.1:8000/api/register/
