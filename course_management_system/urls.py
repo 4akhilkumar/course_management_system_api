@@ -1,7 +1,10 @@
 from django.urls import path
 from . import views
+from .views import (CourseList, CourseDetail, UserLoginView, UserRegisterView)
 
 urlpatterns = [
-    path('', views.login_page, name='login'),
-    path('manage_course/', views.manage_course, name='manage_course'),
+    path('register/', UserRegisterView.as_view()),
+    path('login/', UserLoginView.as_view()),
+    path('manage_course/', CourseList.as_view(), name='managecourse'),
+    path('<uuid:pk>/', CourseDetail.as_view(), name='eachcourse'),
 ]

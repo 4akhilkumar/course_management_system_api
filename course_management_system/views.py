@@ -1,40 +1,32 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User, Group
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth import logout
-from django.http import HttpResponse, JsonResponse
-from django.core import serializers
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.views import APIView
+from rest_framework import status
+from rest_framework.response import Response
+from .serializers import UserLoginSerializer, UserRegisterSerializer
+
 
 import io
 import pandas as pd
 
 from .models import *
 
-from rest_framework import status
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
+from rest_framework import generics
 
-from .serializers import *
+from .serializers import (CourseSerializer)
 
+class CourseList(generics.ListCreateAPIView):
+    queryset = Course.objects.all()
+    serializer_class = CourseSerializer
 
-def login_page(request):
-    if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
-            login(request, user)
-            return redirect('dashboard')
-        else:
-            print('Username or Password is incorrect')
-    return render(request, 'login.html')
+class CourseDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Course.objects.all()
+    serializer_class = CourseSerializer
 
-@api_view(['GET', 'POST'])
 def manage_course(request):
     courses = Course.objects.all()
-    serializer = CourseSerializer(courses, many=True)
-
     success_msg, error_msg = '', ''
     if request.method == "POST":
         course_name = request.POST.get('course_name')
@@ -55,10 +47,11 @@ def manage_course(request):
             success_msg = "%s is created successfully" % (course_name)
         else:
             error_msg = 'Course already exists'
+
     return Response({
         'success_msg': success_msg,
         'error_msg': error_msg,
-        'courses': JsonResponse(serializer.data, safe=False),
+        # 'courses': data,
     })
 
 
@@ -209,7 +202,67 @@ def bulk_upload_students(request):
 
 def logout_user(request):
     logout(request)
-    return redirect('login')
+    pass
+
+class UserRegisterView(APIView):
+    permission_classes = (AllowAny,)
+    serializer_class = UserRegisterSerializer
+
+    def post(self, request):
+        print(request.data)
+        try:
+            serializer = self.serializer_class(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            user = serializer.save()
+
+            status_code = status.HTTP_201_CREATED
+            response = {
+                'success': 'true',
+                'status code': status_code,
+                'message': 'User registered successfully',
+            }
+        except Exception as e:
+            print(str(traceback.format_exc()))
+            user.delete()
+            status_code = status.HTTP_400_BAD_REQUEST
+            response = {
+                'success': 'false',
+                'status code': status_code,
+                'message': "Something went wrong",
+            }
+        return Response(response, status=status_code)
+
+
+class UserLoginView(APIView):
+
+    permission_classes = (AllowAny,)
+    serializer_class = UserLoginSerializer
+
+    def post(self, request):
+        try:
+            serializer = self.serializer_class(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            status_code = status.HTTP_200_OK
+            response = {
+                'success': 'true',
+                'status_code': status_code,
+                'message': 'User logged in successfully',
+                'tokens': {
+                    'refreshToken': serializer.data['refreshToken'],
+                    'accessToken': serializer.data['accessToken'],
+                },
+                'superuser': serializer.data['is_superuser'],
+                'user_id': int(serializer.data['email']),
+            }
+        except Exception as e:
+            print(str(traceback.format_exc()))
+            status_code = status.HTTP_400_BAD_REQUEST
+            response = {
+                'success': 'false',
+                'status_code': status_code,
+                'message': 'Something went wrong',
+            }
+        return Response(response, status=status_code)
 
 # Create superadmin
 # new_group, created = Group.objects.get_or_create(name ='Administrator')
