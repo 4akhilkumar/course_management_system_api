@@ -143,6 +143,7 @@ def course_list(request):
     
     elif request.method == 'DELETE':
         count = Course.objects.all().delete()
+        print(count[0], "Courses were deleted successfully!")
         return JsonResponse({'message': '{} Courses were deleted successfully!'.format(count[0])}, status=status.HTTP_204_NO_CONTENT)
 
 @api_view(['GET', 'PUT', 'DELETE'])
@@ -166,6 +167,7 @@ def course_detail(request, id):
  
     elif request.method == 'DELETE': 
         course.delete() 
+        print("Course deleted successfully!")
         return JsonResponse({'message': 'Course was deleted successfully!'}, status=status.HTTP_204_NO_CONTENT)
 
 def course_task(request):

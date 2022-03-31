@@ -1,7 +1,7 @@
 # Akira_Project
- Akira Project is an Course Management System
+Akira Project is an Course Management System
 
-### To make me live you need to follow the below instructions,
+## To make me live you need to follow the below instructions,
 1. [Install Stabled Python](https://www.python.org/downloads/windows/)
 2. Install the virtualenv package <code> pip install virtualenv </code>
 3. Create the virtual environment <code> virtualenv venv </code>
@@ -16,12 +16,67 @@
 8. To start my server <code> python manage.py runserver </code>
 9. To view on browser http://127.0.0.1:8000/ [Local Host Address]
 
-### API
-1. Login: http://127.0.0.1:8000/api/login/
-2. Register: http://127.0.0.1:8000/api/register/
-3. Get all courses: http://127.0.0.1:8000/api/allCourses/ [GET]
-4. Create a course: http://127.0.0.1:8000/api/createCourse/ [POST]
-5. View each course by ID (UUID): http://127.0.0.1:8000/api/viewCourse/<INSERT_COURSE_UUID>/ [GET]
-   > E.g: http://127.0.0.1:8000/api/viewCourse/16b273b8-4cad-4508-8159-d880ce52c7c2/
-6. Update a course: http://127.0.0.1:8000/api/updateCourse/<INSERT_COURSE_UUID>/ [POST]
-7. Delete a course: http://127.0.0.1:8000/api/deleteCourse/<INSERT_COURSE_UUID>/ [GET]
+## API Documentation
+* Display all courses
+  * GET - ``` http://127.0.0.1:8000/api/courses/ ```
+* Delete all courses
+  * DELETE - ``` http://127.0.0.1:8000/api/courses/ ```
+* Create a course 
+  * POST - ``` http://127.0.0.1:8000/api/courses/ ```
+      ### Headers
+         * Name: Content-Type
+         * Value: application/json
+      ### Body
+      ```JSON
+      {
+         "name": "Technical Skilling",
+         "code": "19CS1234",
+         "description": "In publishing and graphic design, Lorem ipsum is a placeholder text commonly used to demonstrate the visual form of a document or a typeface without relying on meaningful content."
+      }
+      ```
+* Retrieve a single course by id
+   * GET - ``` http://127.0.0.1:8000/api/courses/<course_id>/ ```
+* Update a course by id
+   * PUT - ``` http://127.0.0.1:8000/api/courses/<course_id>/ ```
+      ### Headers
+         * Name: Content-Type
+         * Value: application/json
+      ### Body
+      ```JSON
+      {
+         "name": "Technical Skilling-2",
+         "code": "19CS4321",
+         "description": "In publishing and graphic design, Lorem ipsum is a placeholder text commonly used to demonstrate the visual form of a document or a typeface without relying on meaningful content."
+      }
+      ```
+
+## Sample data in JSON format
+
+```JSON
+[
+   {
+      "id": "43f8de73-d9da-4ad1-ac93-cc4804d83646",
+      "name": "Technical Skilling",
+      "code": "19CS1234",
+      "description": "In publishing and graphic design, Lorem ipsum is a placeholder text commonly used to demonstrate the visual form of a document or a typeface without relying on meaningful content."
+   },
+   {
+      "id": "29b3ceb2-ac20-4369-a6ed-9054d14f3645",
+      "name": "Enterprise Programming",
+      "code": "19CS5678",
+      "description": "In publishing and graphic design, Lorem ipsum is a placeholder text commonly used to demonstrate the visual form of a document or a typeface without relying on meaningful content."
+   },
+   {
+      "id": "c9f9f8f3-d9da-4ad1-ac93-cc4804d83646",
+      "name": "Data Science",
+      "code": "19CS9876",
+      "description": "In publishing and graphic design, Lorem ipsum is a placeholder text commonly used to demonstrate the visual form of a document or a typeface without relying on meaningful content."
+   },
+   {
+      "id": "c9f9f8f3-d9da-4ad1-ac93-cc4804d83646",
+      "name": "Cloud Computing",
+      "code": "19CS9876",
+      "description": "In publishing and graphic design, Lorem ipsum is a placeholder text commonly used to demonstrate the visual form of a document or a typeface without relying on meaningful content."
+   }
+]
+```
