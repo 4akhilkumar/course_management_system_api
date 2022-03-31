@@ -1,10 +1,9 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User, Group
 
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
-from rest_framework import status
+from rest_framework import status, generics
 from rest_framework.response import Response
 from .serializers import (UserLoginSerializer, UserRegisterSerializer, 
                             CourseSerializer)
@@ -17,7 +16,6 @@ import pandas as pd
 
 from .models import *
 
-from rest_framework import generics
 
 class CourseList(generics.ListAPIView):
     queryset = Course.objects.all()
