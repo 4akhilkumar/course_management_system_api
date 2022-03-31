@@ -15,25 +15,24 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         user = User.objects.create_user(**validated_data)
         return user
 
-
 class UserLoginSerializer(serializers.Serializer):
-    email = serializers.EmailField(max_length=255)
+    username = serializers.CharField(max_length=255)
     password = serializers.CharField(max_length=128, write_only=True)
     refreshToken = serializers.CharField(max_length=255, read_only=True)
     accessToken = serializers.CharField(max_length=255, read_only=True)
-    # is_superuser = serializers.BooleanField(required=False)
+    is_superuser = serializers.BooleanField(required=False)
 
     def validate(self, attrs):
-        email = attrs.get('email', None)
+        username = attrs.get('username', None)
         password = attrs.get('password', None)
 
-        user = authenticate(email=email, password=password)
+        user = authenticate(username=username, password=password)
 
         if user is not None:
             update_last_login(None, user)
             refreshToken = RefreshToken.for_user(user)
             return {
-                'email': int(user.id),
+                'username': int(user.id),
                 'refreshToken': str(refreshToken),
                 'accessToken': str(refreshToken.access_token),
                 'is_superuser': user.is_superuser,

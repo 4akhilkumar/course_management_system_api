@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
 from .serializers import UserLoginSerializer, UserRegisterSerializer
-
+import traceback
 
 import io
 import pandas as pd
@@ -252,7 +252,7 @@ class UserLoginView(APIView):
                     'accessToken': serializer.data['accessToken'],
                 },
                 'superuser': serializer.data['is_superuser'],
-                'user_id': int(serializer.data['email']),
+                'user_id': int(serializer.data['username']),
             }
         except Exception as e:
             print(str(traceback.format_exc()))
@@ -264,7 +264,7 @@ class UserLoginView(APIView):
             }
         return Response(response, status=status_code)
 
-# Create superadmin
+# # Create superadmin
 # new_group, created = Group.objects.get_or_create(name ='Administrator')
 # new_group, created = Group.objects.get_or_create(name ='Faculty')
 # new_group, created = Group.objects.get_or_create(name ='Student')
