@@ -21,6 +21,8 @@ Akira Project is an Course Management System
   * GET - ``` http://127.0.0.1:8000/api/courses/ ```
 * Delete all courses
   * DELETE - ``` http://127.0.0.1:8000/api/courses/ ```
+* Delete a course by id
+   * DELETE - ``` http://127.0.0.1:8000/api/courses/<course_id>/ ```
 * Create a course 
   * POST - ``` http://127.0.0.1:8000/api/courses/ ```
       ### Headers
