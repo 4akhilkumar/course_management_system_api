@@ -287,5 +287,3 @@ class UserLoginView(APIView):
 # my_group = Group.objects.get(name='%s' % str(group_name))
 # my_group.user_set.add(user)
 # print("Success")
-userList = User.objects.all()
-print(userList)
