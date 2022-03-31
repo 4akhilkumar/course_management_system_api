@@ -19,3 +19,9 @@
 ### API
 1. Login: http://127.0.0.1:8000/api/login/
 2. Register: http://127.0.0.1:8000/api/register/
+3. Get all courses: http://127.0.0.1:8000/api/allCourses/ [GET]
+4. Create a course: http://127.0.0.1:8000/api/createCourse/ [POST]
+5. View each course by ID (UUID): http://127.0.0.1:8000/api/viewCourse/<INSERT_COURSE_UUID>/ [GET]
+   > E.g: http://127.0.0.1:8000/api/viewCourse/16b273b8-4cad-4508-8159-d880ce52c7c2/
+6. Update a course: http://127.0.0.1:8000/api/updateCourse/<INSERT_COURSE_UUID>/ [POST]
+7. Delete a course: http://127.0.0.1:8000/api/deleteCourse/<INSERT_COURSE_UUID>/ [GET]
