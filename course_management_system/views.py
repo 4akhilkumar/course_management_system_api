@@ -194,7 +194,6 @@ class UserRegisterView(APIView):
             }
         return Response(response, status=status_code)
 
-
 class UserLoginView(APIView):
     permission_classes = (AllowAny,)
     serializer_class = UserLoginSerializer
@@ -202,8 +201,31 @@ class UserLoginView(APIView):
         try:
             serializer = self.serializer_class(data=request.data)
             serializer.is_valid(raise_exception=True)
+            try:
+                groupList = None
+                user = User.objects.get(username=request.data['username'])
+                groupList = ', '.join(map(str, user.groups.all()))
+            except User.DoesNotExist:
+                user = None
+                status_code = status.HTTP_400_BAD_REQUEST
+            if user is not None:
+                userData = {
+                    'id': user.id,
+                    'username': user.username,
+                    'email': user.email,
+                    'first_name': user.first_name,
+                    'last_name': user.last_name,
+                    'is_staff': user.is_staff,
+                    'is_superuser': user.is_superuser,
+                    'is_active': user.is_active,
+                    'group': groupList,
+                }
+            else:
+                userData = None
+                status_code = status.HTTP_400_BAD_REQUEST
             status_code = status.HTTP_200_OK
             response = {
+                'user': userData,
                 'success': 'true',
                 'status_code': status_code,
                 'message': 'User logged in successfully',
@@ -211,8 +233,6 @@ class UserLoginView(APIView):
                     'refreshToken': serializer.data['refreshToken'],
                     'accessToken': serializer.data['accessToken'],
                 },
-                'superuser': serializer.data['is_superuser'],
-                'user_id': int(serializer.data['username']),
             }
         except Exception as e:
             print(str(traceback.format_exc()))
@@ -353,9 +373,8 @@ class CourseDelete(APIView):
     permission_classes = (AllowAny, )
     def get(self, request, id):
         try:
-            course_id = request.POST.get('course_id')
-            if Course.objects.filter(id = course_id).exists() is True:
-                Course.objects.get(id = course_id).delete()
+            if Course.objects.filter(id = id).exists() is True:
+                Course.objects.get(id = id).delete()
                 status_code = status.HTTP_200_OK
                 message = "Course deleted successfully"
             else:
