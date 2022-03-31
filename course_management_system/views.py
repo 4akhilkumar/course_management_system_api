@@ -1,13 +1,17 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User, Group
+
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
-from .serializers import UserLoginSerializer, UserRegisterSerializer
-import traceback
+from .serializers import (UserLoginSerializer, UserRegisterSerializer, 
+                            CourseSerializer)
 
+import boto3
+import time
+import traceback
 import io
 import pandas as pd
 
@@ -15,45 +19,9 @@ from .models import *
 
 from rest_framework import generics
 
-from .serializers import (CourseSerializer)
-
-class CourseList(generics.ListCreateAPIView):
+class CourseList(generics.ListAPIView):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
-
-class CourseDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Course.objects.all()
-    serializer_class = CourseSerializer
-
-def manage_course(request):
-    courses = Course.objects.all()
-    success_msg, error_msg = '', ''
-    if request.method == "POST":
-        course_name = request.POST.get('course_name')
-        course_code = request.POST.get('course_code')
-        course_description = request.POST.get('course_description')
-        course_from_db = Course.objects.all()
-        course_list=[]
-        for i in course_from_db:
-            course_list.append(i.name)
-            course_list.append(i.code)
-
-        if course_name not in course_list and course_code not in course_list:
-            Course.objects.create(
-                name = course_name,
-                code = course_code,
-                description = course_description,
-            )
-            success_msg = "%s is created successfully" % (course_name)
-        else:
-            error_msg = 'Course already exists'
-
-    return Response({
-        'success_msg': success_msg,
-        'error_msg': error_msg,
-        # 'courses': data,
-    })
-
 
 def course_task(request):
     if request.method == 'POST':
@@ -200,16 +168,10 @@ def bulk_upload_students(request):
     else:
         return redirect('manage_students')
 
-def logout_user(request):
-    logout(request)
-    pass
-
 class UserRegisterView(APIView):
     permission_classes = (AllowAny,)
     serializer_class = UserRegisterSerializer
-
     def post(self, request):
-        print(request.data)
         try:
             serializer = self.serializer_class(data=request.data)
             serializer.is_valid(raise_exception=True)
@@ -234,10 +196,8 @@ class UserRegisterView(APIView):
 
 
 class UserLoginView(APIView):
-
     permission_classes = (AllowAny,)
     serializer_class = UserLoginSerializer
-
     def post(self, request):
         try:
             serializer = self.serializer_class(data=request.data)
@@ -264,26 +224,153 @@ class UserLoginView(APIView):
             }
         return Response(response, status=status_code)
 
-# # Create superadmin
-# new_group, created = Group.objects.get_or_create(name ='Administrator')
-# new_group, created = Group.objects.get_or_create(name ='Faculty')
-# new_group, created = Group.objects.get_or_create(name ='Student')
+class uploadFileToS3(APIView):
+    permission_classes = (AllowAny, )
+    def post(self, request):
+        try:
+            file = request.FILES['file']
+            filename = str(int(time.time() * 1000)) + '.pdf'
+            s3 = boto3.resource('s3', aws_access_key_id="AKIA4WAVXNSTKLN3QID6",
+                                aws_secret_access_key="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")
+            bucket = s3.Bucket("190031153")
+            bucket.put_object(Key=filename, Body=file)
+            s3_url = "https://190031153.s3.ap-south-1.amazonaws.com/" + filename
+            status_code = status.HTTP_200_OK
+            response = {
+                "success": "true",
+                'status_code': status_code,
+                's3_url': s3_url
+            }
+        except Exception as e:
+            status_code = status.HTTP_400_BAD_REQUEST
+            response = {
+                'success': 'failed',
+                'status_code': status_code,
+                'error': str(e)
+            }
+        return Response(response, status=status_code)
 
-# if User.objects.filter(username='4akhilkumar').exists() is True:
-#     user = User.objects.get(username = '4akhilkumar')
-# else:
-#     user = User.objects.create_user(username='4akhilkumar')
-# user.username = '4akhilkumar'
-# user.first_name = 'Sai Akhil Kumar Reddy'
-# user.last_name = 'N'
-# user.email = '4akhilkumar@gmail.com'
-# user.set_password("AKIRAaccount@21")
-# user.is_active = True
-# user.is_staff = True
-# user.is_superuser = True
-# user.save()
 
-# group_name = 'Administrator'
-# my_group = Group.objects.get(name='%s' % str(group_name))
-# my_group.user_set.add(user)
-# print("Success")
+class CourseCreate(APIView):
+    permission_classes = (AllowAny, )
+    def post(self, request):
+        try:
+            course_name = request.POST.get('course_name')
+            course_code = request.POST.get('course_code')
+            course_description = request.POST.get('course_description')
+
+            if Course.objects.filter(name = course_name, code = course_code).exists() is False:
+                Course.objects.create(
+                    name = course_name,
+                    code = course_code,
+                    description = course_description,
+                )
+                message = "%s is created successfully" % (course_name)
+                process_status = 'true'
+            else:
+                message = 'Course already exists'
+                process_status = 'false'
+            response = {
+                'success': process_status,
+                'status_code': status_code,
+                'message': message,
+            }
+        except Exception as e:
+            print(str(traceback.format_exc()))
+            status_code = status.HTTP_400_BAD_REQUEST
+            response = {
+                'success': 'false',
+                'status_code': status_code,
+                'message': 'Something went wrong',
+            }
+        return Response(response, status=status_code)
+
+class CourseView(APIView):
+    permission_classes = (AllowAny, )
+    def get(self, request, id):
+        try:
+            try:
+                course = Course.objects.get(id = id)
+                course_name = course.name
+                course_code = course.code
+                course_description = course.description
+                status_code = status.HTTP_200_OK
+            except Course.DoesNotExist:
+                course_name = 'None'
+                course_code = 'None'
+                course_description = 'None'
+                status_code = status.HTTP_400_BAD_REQUEST
+            response = {
+                'course_name': course_name,
+                'course_code': course_code,
+                'course_description': course_description,
+                'status_code': status_code,
+            }
+        except Exception as e:
+            print(str(traceback.format_exc()))
+            status_code = status.HTTP_400_BAD_REQUEST
+            response = {
+                'success': 'false',
+                'status_code': status_code,
+                'message': 'Something went wrong',
+            }
+        return Response(response, status=status_code)
+
+class CourseUpdate(APIView):
+    permission_classes = (AllowAny, )
+    def post(self, request):
+        try:
+            course_id = request.POST.get('course_id')
+            course_name = request.POST.get('course_name')
+            course_code = request.POST.get('course_code')
+            course_description = request.POST.get('course_description')
+            if Course.objects.filter(id = course_id).exists() is True:
+                course = Course.objects.get(id = course_id)
+                course.name = course_name
+                course.code = course_code
+                course.description = course_description
+                course.save()
+                status_code = status.HTTP_200_OK
+                message = "Course updated successfully"
+            else:
+                status_code = status.HTTP_400_BAD_REQUEST
+                message = "Course does not exist"
+            response = {
+                'status_code': status_code,
+                'message': message,
+            }
+        except Exception as e:
+            print(str(traceback.format_exc()))
+            status_code = status.HTTP_400_BAD_REQUEST
+            response = {
+                'success': 'false',
+                'status_code': status_code,
+                'message': 'Something went wrong',
+            }
+        return Response(response, status=status_code)
+
+class CourseDelete(APIView):
+    permission_classes = (AllowAny, )
+    def get(self, request, id):
+        try:
+            course_id = request.POST.get('course_id')
+            if Course.objects.filter(id = course_id).exists() is True:
+                Course.objects.get(id = course_id).delete()
+                status_code = status.HTTP_200_OK
+                message = "Course deleted successfully"
+            else:
+                status_code = status.HTTP_400_BAD_REQUEST
+                message = "Course does not exist"
+            response = {
+                'status_code': status_code,
+                'message': message,
+            }
+        except Exception as e:
+            print(str(traceback.format_exc()))
+            status_code = status.HTTP_400_BAD_REQUEST
+            response = {
+                'success': 'false',
+                'status_code': status_code,
+                'message': 'Something went wrong',
+            }
+        return Response(response, status=status_code)
