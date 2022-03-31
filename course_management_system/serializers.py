@@ -40,8 +40,13 @@ class UserLoginSerializer(serializers.Serializer):
         else:
             raise Exception('A user with this metamask_id and password is not found.')
 
-class CourseSerializer(serializers.ModelSerializer):
+class CourseSerializerID(serializers.ModelSerializer):
     id = serializers.UUIDField()
     class Meta:
         model = Course
         fields = ['id', 'name', 'code', 'description']
+
+class CourseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Course
+        fields = ['name', 'code', 'description']

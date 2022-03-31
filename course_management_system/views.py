@@ -1,25 +1,172 @@
-from django.shortcuts import render, redirect
 from django.contrib.auth.models import User, Group
+from django.http.response import JsonResponse
+from django.shortcuts import render, redirect
 
+from rest_framework import status
+from rest_framework.decorators import api_view
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.views import APIView
-from rest_framework import status, generics
+from rest_framework.parsers import JSONParser 
 from rest_framework.response import Response
-from .serializers import (UserLoginSerializer, UserRegisterSerializer, 
-                            CourseSerializer)
+from rest_framework.views import APIView
 
-import boto3
-import time
-import traceback
-import io
-import pandas as pd
-
+from .serializers import *
 from .models import *
 
+import boto3
+import io
+import pandas as pd
+import time
+import traceback
 
-class CourseList(generics.ListAPIView):
-    queryset = Course.objects.all()
-    serializer_class = CourseSerializer
+class UserRegisterView(APIView):
+    permission_classes = (AllowAny,)
+    serializer_class = UserRegisterSerializer
+    def post(self, request):
+        try:
+            serializer = self.serializer_class(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            user = serializer.save()
+
+            status_code = status.HTTP_201_CREATED
+            response = {
+                'success': 'true',
+                'status code': status_code,
+                'message': 'User registered successfully',
+            }
+        except Exception as e:
+            print(str(traceback.format_exc()))
+            user.delete()
+            status_code = status.HTTP_400_BAD_REQUEST
+            response = {
+                'success': 'false',
+                'status code': status_code,
+                'message': "Something went wrong",
+            }
+        return Response(response, status=status_code)
+
+class UserLoginView(APIView):
+    permission_classes = (AllowAny,)
+    serializer_class = UserLoginSerializer
+    def post(self, request):
+        try:
+            serializer = self.serializer_class(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            try:
+                groupList = None
+                user = User.objects.get(username=request.data['username'])
+                groupList = ', '.join(map(str, user.groups.all()))
+            except User.DoesNotExist:
+                user = None
+                status_code = status.HTTP_400_BAD_REQUEST
+            if user is not None:
+                userData = {
+                    'id': user.id,
+                    'username': user.username,
+                    'email': user.email,
+                    'first_name': user.first_name,
+                    'last_name': user.last_name,
+                    'is_staff': user.is_staff,
+                    'is_superuser': user.is_superuser,
+                    'is_active': user.is_active,
+                    'group': groupList,
+                }
+            else:
+                userData = None
+                status_code = status.HTTP_400_BAD_REQUEST
+            status_code = status.HTTP_200_OK
+            response = {
+                'user': userData,
+                'success': 'true',
+                'status_code': status_code,
+                'message': 'User logged in successfully',
+                'tokens': {
+                    'refreshToken': serializer.data['refreshToken'],
+                    'accessToken': serializer.data['accessToken'],
+                },
+            }
+        except Exception as e:
+            print(str(traceback.format_exc()))
+            status_code = status.HTTP_400_BAD_REQUEST
+            response = {
+                'success': 'false',
+                'status_code': status_code,
+                'message': 'Something went wrong',
+            }
+        return Response(response, status=status_code)
+
+class uploadFileToS3(APIView):
+    permission_classes = (AllowAny, )
+    def post(self, request):
+        try:
+            file = request.FILES['file']
+            filename = str(int(time.time() * 1000)) + '.pdf'
+            s3 = boto3.resource('s3', aws_access_key_id="AKIA4WAVXNSTKLN3QID6",
+                                aws_secret_access_key="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")
+            bucket = s3.Bucket("190031153")
+            bucket.put_object(Key=filename, Body=file)
+            s3_url = "https://190031153.s3.ap-south-1.amazonaws.com/" + filename
+            status_code = status.HTTP_200_OK
+            response = {
+                "success": "true",
+                'status_code': status_code,
+                's3_url': s3_url
+            }
+        except Exception as e:
+            status_code = status.HTTP_400_BAD_REQUEST
+            response = {
+                'success': 'failed',
+                'status_code': status_code,
+                'error': str(e)
+            }
+        return Response(response, status=status_code)
+
+@api_view(['GET', 'POST', 'DELETE'])
+def course_list(request):
+    if request.method == 'GET':
+        courses = Course.objects.all()
+        
+        id = request.query_params.get('id', None)
+        if id is not None:
+            courses = Course.filter(id=id)
+        
+        courses_serializer = CourseSerializerID(courses, many=True)
+        return JsonResponse(courses_serializer.data, safe=False)
+        # 'safe=False' for objects serialization
+ 
+    elif request.method == 'POST':
+        course_data = JSONParser().parse(request)
+        courses_serializer = CourseSerializer(data=course_data)
+        if courses_serializer.is_valid():
+            courses_serializer.save()
+            return JsonResponse(courses_serializer.data, status=status.HTTP_201_CREATED) 
+        return JsonResponse(courses_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    elif request.method == 'DELETE':
+        count = Course.objects.all().delete()
+        return JsonResponse({'message': '{} Courses were deleted successfully!'.format(count[0])}, status=status.HTTP_204_NO_CONTENT)
+
+@api_view(['GET', 'PUT', 'DELETE'])
+def course_detail(request, id):
+    try:
+        course = Course.objects.get(id=id) 
+    except Course.DoesNotExist: 
+        return JsonResponse({'message': 'The course does not exist'}, status=status.HTTP_404_NOT_FOUND) 
+ 
+    if request.method == 'GET': 
+        course_serializer = CourseSerializer(course) 
+        return JsonResponse(course_serializer.data) 
+ 
+    elif request.method == 'PUT': 
+        course_data = JSONParser().parse(request) 
+        course_serializer = CourseSerializer(course, data=course_data) 
+        if course_serializer.is_valid(): 
+            course_serializer.save() 
+            return JsonResponse(course_serializer.data) 
+        return JsonResponse(course_serializer.errors, status=status.HTTP_400_BAD_REQUEST) 
+ 
+    elif request.method == 'DELETE': 
+        course.delete() 
+        return JsonResponse({'message': 'Course was deleted successfully!'}, status=status.HTTP_204_NO_CONTENT)
 
 def course_task(request):
     if request.method == 'POST':
@@ -165,229 +312,3 @@ def bulk_upload_students(request):
         return redirect('manage_students')
     else:
         return redirect('manage_students')
-
-class UserRegisterView(APIView):
-    permission_classes = (AllowAny,)
-    serializer_class = UserRegisterSerializer
-    def post(self, request):
-        try:
-            serializer = self.serializer_class(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            user = serializer.save()
-
-            status_code = status.HTTP_201_CREATED
-            response = {
-                'success': 'true',
-                'status code': status_code,
-                'message': 'User registered successfully',
-            }
-        except Exception as e:
-            print(str(traceback.format_exc()))
-            user.delete()
-            status_code = status.HTTP_400_BAD_REQUEST
-            response = {
-                'success': 'false',
-                'status code': status_code,
-                'message': "Something went wrong",
-            }
-        return Response(response, status=status_code)
-
-class UserLoginView(APIView):
-    permission_classes = (AllowAny,)
-    serializer_class = UserLoginSerializer
-    def post(self, request):
-        try:
-            serializer = self.serializer_class(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            try:
-                groupList = None
-                user = User.objects.get(username=request.data['username'])
-                groupList = ', '.join(map(str, user.groups.all()))
-            except User.DoesNotExist:
-                user = None
-                status_code = status.HTTP_400_BAD_REQUEST
-            if user is not None:
-                userData = {
-                    'id': user.id,
-                    'username': user.username,
-                    'email': user.email,
-                    'first_name': user.first_name,
-                    'last_name': user.last_name,
-                    'is_staff': user.is_staff,
-                    'is_superuser': user.is_superuser,
-                    'is_active': user.is_active,
-                    'group': groupList,
-                }
-            else:
-                userData = None
-                status_code = status.HTTP_400_BAD_REQUEST
-            status_code = status.HTTP_200_OK
-            response = {
-                'user': userData,
-                'success': 'true',
-                'status_code': status_code,
-                'message': 'User logged in successfully',
-                'tokens': {
-                    'refreshToken': serializer.data['refreshToken'],
-                    'accessToken': serializer.data['accessToken'],
-                },
-            }
-        except Exception as e:
-            print(str(traceback.format_exc()))
-            status_code = status.HTTP_400_BAD_REQUEST
-            response = {
-                'success': 'false',
-                'status_code': status_code,
-                'message': 'Something went wrong',
-            }
-        return Response(response, status=status_code)
-
-class uploadFileToS3(APIView):
-    permission_classes = (AllowAny, )
-    def post(self, request):
-        try:
-            file = request.FILES['file']
-            filename = str(int(time.time() * 1000)) + '.pdf'
-            s3 = boto3.resource('s3', aws_access_key_id="AKIA4WAVXNSTKLN3QID6",
-                                aws_secret_access_key="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")
-            bucket = s3.Bucket("190031153")
-            bucket.put_object(Key=filename, Body=file)
-            s3_url = "https://190031153.s3.ap-south-1.amazonaws.com/" + filename
-            status_code = status.HTTP_200_OK
-            response = {
-                "success": "true",
-                'status_code': status_code,
-                's3_url': s3_url
-            }
-        except Exception as e:
-            status_code = status.HTTP_400_BAD_REQUEST
-            response = {
-                'success': 'failed',
-                'status_code': status_code,
-                'error': str(e)
-            }
-        return Response(response, status=status_code)
-
-
-class CourseCreate(APIView):
-    permission_classes = (AllowAny, )
-    def post(self, request):
-        try:
-            course_name = request.POST.get('course_name')
-            course_code = request.POST.get('course_code')
-            course_description = request.POST.get('course_description')
-
-            if Course.objects.filter(name = course_name, code = course_code).exists() is False:
-                Course.objects.create(
-                    name = course_name,
-                    code = course_code,
-                    description = course_description,
-                )
-                message = "%s is created successfully" % (course_name)
-                process_status = 'true'
-            else:
-                message = 'Course already exists'
-                process_status = 'false'
-            response = {
-                'success': process_status,
-                'status_code': status_code,
-                'message': message,
-            }
-        except Exception as e:
-            print(str(traceback.format_exc()))
-            status_code = status.HTTP_400_BAD_REQUEST
-            response = {
-                'success': 'false',
-                'status_code': status_code,
-                'message': 'Something went wrong',
-            }
-        return Response(response, status=status_code)
-
-class CourseView(APIView):
-    permission_classes = (AllowAny, )
-    def get(self, request, id):
-        try:
-            try:
-                course = Course.objects.get(id = id)
-                course_name = course.name
-                course_code = course.code
-                course_description = course.description
-                status_code = status.HTTP_200_OK
-            except Course.DoesNotExist:
-                course_name = 'None'
-                course_code = 'None'
-                course_description = 'None'
-                status_code = status.HTTP_400_BAD_REQUEST
-            response = {
-                'course_name': course_name,
-                'course_code': course_code,
-                'course_description': course_description,
-                'status_code': status_code,
-            }
-        except Exception as e:
-            print(str(traceback.format_exc()))
-            status_code = status.HTTP_400_BAD_REQUEST
-            response = {
-                'success': 'false',
-                'status_code': status_code,
-                'message': 'Something went wrong',
-            }
-        return Response(response, status=status_code)
-
-class CourseUpdate(APIView):
-    permission_classes = (AllowAny, )
-    def post(self, request):
-        try:
-            course_id = request.POST.get('course_id')
-            course_name = request.POST.get('course_name')
-            course_code = request.POST.get('course_code')
-            course_description = request.POST.get('course_description')
-            if Course.objects.filter(id = course_id).exists() is True:
-                course = Course.objects.get(id = course_id)
-                course.name = course_name
-                course.code = course_code
-                course.description = course_description
-                course.save()
-                status_code = status.HTTP_200_OK
-                message = "Course updated successfully"
-            else:
-                status_code = status.HTTP_400_BAD_REQUEST
-                message = "Course does not exist"
-            response = {
-                'status_code': status_code,
-                'message': message,
-            }
-        except Exception as e:
-            print(str(traceback.format_exc()))
-            status_code = status.HTTP_400_BAD_REQUEST
-            response = {
-                'success': 'false',
-                'status_code': status_code,
-                'message': 'Something went wrong',
-            }
-        return Response(response, status=status_code)
-
-class CourseDelete(APIView):
-    permission_classes = (AllowAny, )
-    def get(self, request, id):
-        try:
-            if Course.objects.filter(id = id).exists() is True:
-                Course.objects.get(id = id).delete()
-                status_code = status.HTTP_200_OK
-                message = "Course deleted successfully"
-            else:
-                status_code = status.HTTP_400_BAD_REQUEST
-                message = "Course does not exist"
-            response = {
-                'status_code': status_code,
-                'message': message,
-            }
-        except Exception as e:
-            print(str(traceback.format_exc()))
-            status_code = status.HTTP_400_BAD_REQUEST
-            response = {
-                'success': 'false',
-                'status_code': status_code,
-                'message': 'Something went wrong',
-            }
-        return Response(response, status=status_code)
