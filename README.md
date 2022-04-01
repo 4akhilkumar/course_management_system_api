@@ -62,6 +62,16 @@ Akira Project is an Course Management System
       ```
       ![Upload the task submission to a course](https://raw.githubusercontent.com/4akhilkumar/course_management_system_api/main/API%20Documentation%20files/bulk_upload.jpg?token=GHSAT0AAAAAABTDLBARJD645AS3QBPSKDZYYSPXWZA)
 
+* Bulk faculty course registration 
+  * POST - ``` http://127.0.0.1:8000/api/bulk_faculty_reg_course/ ```
+      ### Headers
+         * Name: Content-Type
+         * Value: multipart/form-data
+      ### Body
+      ```Form [Name - Value]
+      faculty_file - <Upload file>
+      ```
+
 * Bulk upload students 
   * POST - ``` http://127.0.0.1:8000/api/bulk_upload_students/ ```
       ### Headers
@@ -72,6 +82,16 @@ Akira Project is an Course Management System
       student_file - <Upload file>
       ```
       ![Upload the task submission to a course](https://raw.githubusercontent.com/4akhilkumar/course_management_system_api/main/API%20Documentation%20files/bulk_upload(2).jpg?token=GHSAT0AAAAAABTDLBARH2HYG43C7S5XTZGOYSPX2AQ)
+
+* Bulk student course registration 
+  * POST - ``` http://127.0.0.1:8000/api/bulk_students_reg_course/ ```
+      ### Headers
+         * Name: Content-Type
+         * Value: multipart/form-data
+      ### Body
+      ```Form [Name - Value]
+      faculty_file - <Upload file>
+      ```
 
 * Upload the task submission to a course
    * POST - ``` http://127.0.0.1:8000/api/course_task_submission/ ```

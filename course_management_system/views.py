@@ -2,7 +2,7 @@ from email import message
 from django.contrib.auth.models import User, Group
 from django.http.response import JsonResponse
 from django.shortcuts import render, redirect
-from numpy import require
+from numpy import NaN, require
 
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -265,7 +265,7 @@ def bulk_upload_faculty(request):
                 faculty = Faculty.objects.bulk_create([
                     Faculty(
                         user_id = newuser.id,
-                        course = Course.objects.get(name = row['course_name']),
+                        gender = row['gender'],
                     )
                 ])
                 message = "Faculty uploaded successfully"
@@ -274,6 +274,51 @@ def bulk_upload_faculty(request):
                 message = "User already exists with this username or email"
                 status_code = status.HTTP_400_BAD_REQUEST
         return JsonResponse({'message': message}, status=status_code)
+
+@api_view(['POST'])
+def bulk_faculty_reg_course(request):
+    if request.method == 'POST':
+        faculty_from_db = User.objects.all()
+        faculty_user=[]
+        for i in faculty_from_db:
+            faculty_user.append(i.username)
+            faculty_user.append(i.email)
+
+        paramFile = io.TextIOWrapper(request.data['faculty_file'].file)
+        data = pd.read_csv(paramFile)
+        data.drop_duplicates(subset ="Username", keep = 'first', inplace = True)
+
+        messages_dict = {}
+        for index, row in data.iterrows():
+            if str(row['Username']) in faculty_user or str(row['Email']) in faculty_user:
+                current_user = User.objects.get(username = str(row['Username']))
+                totalCourses = row['course_name'].split(',')
+                for iteration in range(len(totalCourses)):
+                    eachCourse = str(totalCourses[iteration]).strip()
+                    if Course.objects.filter(name = eachCourse).exists() is True:
+                        eachCourseObj = Course.objects.get(name = eachCourse)
+                        if FacultyRegCourse.objects.filter(user = current_user, course = eachCourseObj).exists() is True:
+                            message = "%s already registered for %s course" % (current_user, eachCourse)
+                            messages_dict[str(iteration)+":"+str(current_user)] = message
+                        elif FacultyRegCourse.objects.filter(user = current_user, course = eachCourseObj).exists() is False:
+                            FacultyRegCourse.objects.create(user = current_user, course = eachCourseObj)
+                            message = "%s registered for %s course" % (current_user, eachCourse)
+                            messages_dict[str(iteration)+":"+str(current_user)] = message
+                        elif FacultyRegCourse.objects.filter(user = current_user).exists() is False:
+                            message = "%s not registered for any course" % (current_user)
+                            messages_dict[str(iteration)+":"+str(current_user)] = message
+                            FacultyRegCourse.objects.create(user = current_user, course = eachCourseObj)
+                        status_code = status.HTTP_200_OK
+                    else:
+                        message = "Course doesn't exists!"
+            else:
+                if row['Username'] is not NaN:
+                    message = "User %s doesn't exists with this username or email" % str(row['Username']).strip()
+                    messages_dict["Status"] = message
+                    status_code = status.HTTP_400_BAD_REQUEST
+                else:
+                    status_code = status.HTTP_204_NO_CONTENT
+        return JsonResponse(messages_dict, status=status_code)
 
 @api_view(['POST'])
 def bulk_upload_students(request):
@@ -305,7 +350,7 @@ def bulk_upload_students(request):
                 student = Student.objects.bulk_create([
                     Student(
                         user_id = newuser.id,
-                        course = Course.objects.get(name = row['course_name']),
+                        gender = row['gender'],
                     )
                 ])
                 message = "Students uploaded successfully"
@@ -314,3 +359,48 @@ def bulk_upload_students(request):
                 message = "User already exists with this username or email"
                 status_code = status.HTTP_400_BAD_REQUEST
         return JsonResponse({'message': message}, status=status_code)
+
+@api_view(['POST'])
+def bulk_students_reg_course(request):
+    if request.method == 'POST':
+        student_from_db = User.objects.all()
+        student_user=[]
+        for i in student_from_db:
+            student_user.append(i.username)
+            student_user.append(i.email)
+
+        paramFile = io.TextIOWrapper(request.data['student_file'].file)
+        data = pd.read_csv(paramFile)
+        data.drop_duplicates(subset ="Username", keep = 'first', inplace = True)
+
+        messages_dict = {}
+        for index, row in data.iterrows():
+            if str(row['Username']) in student_user or str(row['Email']) in student_user:
+                current_user = User.objects.get(username = str(row['Username']))
+                totalCourses = row['course_name'].split(',')
+                for iteration in range(len(totalCourses)):
+                    eachCourse = str(totalCourses[iteration]).strip()
+                    if Course.objects.filter(name = eachCourse).exists() is True:
+                        eachCourseObj = Course.objects.get(name = eachCourse)
+                        if StudentRegCourse.objects.filter(user = current_user, course = eachCourseObj).exists() is True:
+                            message = "%s already registered for %s course" % (current_user, eachCourse)
+                            messages_dict[str(iteration)+":"+str(current_user)] = message
+                        elif StudentRegCourse.objects.filter(user = current_user, course = eachCourseObj).exists() is False:
+                            StudentRegCourse.objects.create(user = current_user, course = eachCourseObj)
+                            message = "%s registered for %s course" % (current_user, eachCourse)
+                            messages_dict[str(iteration)+":"+str(current_user)] = message
+                        elif StudentRegCourse.objects.filter(user = current_user).exists() is False:
+                            message = "%s not registered for any course" % (current_user)
+                            messages_dict[str(iteration)+":"+str(current_user)] = message
+                            StudentRegCourse.objects.create(user = current_user, course = eachCourseObj)
+                        status_code = status.HTTP_200_OK
+                    else:
+                        message = "Course doesn't exists!"
+            else:
+                if row['Username'] is not NaN:
+                    message = "User %s doesn't exists with this username or email" % str(row['Username']).strip()
+                    messages_dict["Status"] = message
+                    status_code = status.HTTP_400_BAD_REQUEST
+                else:
+                    status_code = status.HTTP_204_NO_CONTENT
+        return JsonResponse(messages_dict, status=status_code)
