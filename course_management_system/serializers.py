@@ -5,6 +5,11 @@ from django.contrib.auth.models import update_last_login
 
 from .models import *
 
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'first_name', 'last_name']
+
 class UserRegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -83,3 +88,15 @@ class TaskSubmissionSerializer(serializers.ModelSerializer):
     class Meta:
         model = TaskSubmission
         fields = ['task', 'user_student', 'file', 'user_faculty', 'score', 'feedback']
+
+class FacultyRegCourseSerializer(serializers.ModelSerializer): 
+    course = CourseSerializerID()
+    class Meta:
+        model = FacultyRegCourse
+        fields = ['course']
+
+class StudentRegCourseSerializer(serializers.ModelSerializer): 
+    course = CourseSerializerID()
+    class Meta:
+        model = StudentRegCourse
+        fields = ['course']

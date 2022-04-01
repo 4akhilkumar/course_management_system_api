@@ -16,6 +16,7 @@ from .models import *
 
 import boto3
 import io
+import json
 import pandas as pd
 import time
 import traceback
@@ -171,6 +172,50 @@ def course_detail(request, id):
         course.delete() 
         print("Course deleted successfully!")
         return JsonResponse({'message': 'Course was deleted successfully!'}, status=status.HTTP_204_NO_CONTENT)
+
+@api_view(['GET'])
+def get_faculty_registered_courses(request, faculty_id):
+    if request.method == 'GET':
+        try:
+            user = User.objects.get(id=faculty_id) 
+        except User.DoesNotExist: 
+            return JsonResponse({'message': 'User does not exist'}, status=status.HTTP_404_NOT_FOUND)
+    
+        if user is not None:
+            courses = FacultyRegCourse.objects.filter(user = user)
+            faculty_course_serializer = FacultyRegCourseSerializer(courses, many = True)
+            DRF = faculty_course_serializer.data
+            json_data = json.dumps(DRF)
+            parsed_json = json.loads(json_data)
+            dict = []
+            for course in parsed_json:
+                eachCourse = course['course']
+                dict.append(eachCourse)
+            return JsonResponse(dict, safe=False)
+        else:
+            return JsonResponse({'message': 'User does not exist'}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['GET'])
+def get_student_registered_courses(request, student_id):
+    if request.method == 'GET':
+        try:
+            user = User.objects.get(id=student_id) 
+        except User.DoesNotExist: 
+            return JsonResponse({'message': 'User does not exist'}, status=status.HTTP_404_NOT_FOUND)
+    
+        if user is not None:
+            courses = StudentRegCourse.objects.filter(user = user)
+            student_course_serializer = StudentRegCourseSerializer(courses, many = True)
+            DRF = student_course_serializer.data
+            json_data = json.dumps(DRF)
+            parsed_json = json.loads(json_data)
+            dict = []
+            for course in parsed_json:
+                eachCourse = course['course']
+                dict.append(eachCourse)
+            return JsonResponse(dict, safe=False)
+        else:
+            return JsonResponse({'message': 'User does not exist'}, status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['POST'])
 def course_task(request):

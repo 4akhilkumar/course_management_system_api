@@ -93,6 +93,12 @@ Akira Project is an Course Management System
       student_file - <Upload file>
       ```
 
+* Get courses registered by a faculty by id
+   * GET - ``` http://127.0.0.1:8000/api/get_faculty_registered_courses/<faculty_id>/ ```
+
+* Get courses registered by a student by id
+   * GET - ``` http://127.0.0.1:8000/api/get_student_registered_courses/<student_id>/ ```
+
 * Upload the task submission to a course
    * POST - ``` http://127.0.0.1:8000/api/course_task_submission/ ```
       ### Headers
