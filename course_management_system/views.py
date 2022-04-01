@@ -170,80 +170,86 @@ def course_detail(request, id):
         print("Course deleted successfully!")
         return JsonResponse({'message': 'Course was deleted successfully!'}, status=status.HTTP_204_NO_CONTENT)
 
+@api_view(['POST'])
 def course_task(request):
     if request.method == 'POST':
-        course_name = request.POST.get('course_name') # hidden field
-        task_name = request.POST.get('task_name')
-        task_desc = request.POST.get('task_desc')
+        course_task_data = JSONParser().parse(request)
+        course_task_serializer = TaskSerializer(data = course_task_data)
+        if course_task_serializer.is_valid():
+            course_task_serializer.save()
+            return JsonResponse(course_task_serializer.data, status=status.HTTP_201_CREATED) 
+        return JsonResponse(course_task_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        if Course.objects.filter(name = course_name).exists() is True:
-            if Task.objects.filter(name = task_name, course = course_name).exists() is False:
-                Task.objects.create(
-                    course = Course.objects.get(name = course_name).id,
-                    name = task_name,
-                    description = task_desc,
-                )
-            else:
-                print('Same Task already exists in this course')
-        else:
-            print('Course does not exist')
-    context = {
-        'tasks': Task.objects.all(),
-    }
-    return render(request, 'course_task.html', context)
-
-def task_submission(request):
+@api_view(['POST'])
+def course_task_submission(request):
     if request.method == 'POST':
-        task_name = request.POST.get('task_name') # hidden field
-        current_student = request.POST.get('current_student') # hidden field
-        submission_file = request.FILES['submission_file']
-
-        if Task.objects.filter(name = task_name).exists() is True:
-            if TaskSubmission.objects.filter(task = task_name, student = current_student).exists() is False:
-                TaskSubmission.objects.create(
-                    task = Task.objects.get(name = task_name),
-                    user_student = User.objects.get(username = current_student),
-                    file = submission_file,
-                )
+        task_id = request.data['task']
+        submission_file = request.data['file']
+        if Task.objects.filter(id = task_id).exists() is True:
+            taskObj = Task.objects.get(id = task_id)
+            student_id = int(request.data['user_student'])
+            if User.objects.filter(id = student_id).exists() is True:
+                current_student = User.objects.get(id = student_id)
+                if TaskSubmission.objects.filter(task = taskObj, user_student = current_student).exists() is False:
+                    taskSubmissionObj = TaskSubmission.objects.create(
+                        task = taskObj,
+                        user_student = current_student,
+                        file = submission_file,
+                    )
+                    taskSubmission_serializer = TaskSubmissionSerializer(taskSubmissionObj) 
+                    return JsonResponse(taskSubmission_serializer.data)
+                else:
+                    message = 'You already submitted this task'
             else:
-                print('You already submitted this task')
-        return redirect('task_submission')
-    context = {
-        'tasks': Task.objects.all(),
-    }
-    return render(request, 'task_submission.html', context)
+                message = "User does not exist"
+        else:
+            message = "Task does not exist"
+        return JsonResponse({'message': message}, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(['POST'])
 def evaluate_submission(request):
     if request.method == 'POST':
-        TaskSubmission_id = request.POST.get('TaskSubmission_id') # hidden field
-        current_faculty = request.POST.get('current_faculty') # hidden field
-        score = request.POST.get('score')
-        feedback = request.POST.get('feedback')
+        task_submission_id = request.data['task_submission_id']
+        score = request.data['score']
+        feedback = request.data['feedback']
+        if TaskSubmission.objects.filter(id = task_submission_id).exists() is True:
+            taskSubObj = TaskSubmission.objects.get(id = task_submission_id)
+            faculty_id = request.data['user_faculty']
+            if User.objects.filter(id = faculty_id).exists() is True:
+                current_faculty = User.objects.get(id = faculty_id)
+                if TaskSubmission.objects.filter(id = task_submission_id, user_faculty = current_faculty).exists() is False:
+                    taskSubmissionObj = taskSubObj
+                    taskSubmissionObj.user_faculty = current_faculty
+                    taskSubmissionObj.score = score
+                    taskSubmissionObj.feedback = feedback
+                    taskSubmissionObj.save()
+                    taskSubmission_serializer = TaskSubmissionSerializer(taskSubmissionObj) 
+                    return JsonResponse(taskSubmission_serializer.data)
+                else:
+                    message = 'You already graded this task submission'
+            else:
+                message = "User does not exist"
+        else:
+            message = "Task submission does not exist"
+        return JsonResponse({'message': message}, status=status.HTTP_400_BAD_REQUEST)
 
-        task_submission = TaskSubmission.objects.get(id=TaskSubmission_id)
-        task_submission.user_faculty = User.objects.get(username = current_faculty)
-        task_submission.score = score
-        task_submission.feedback = feedback
-        task_submission.save()
-        return redirect('task_submission')
-    context = {
-        'tasks': Task.objects.all(),
-    }
-    return render(request, 'task_submission.html', context)
+# def evaluate_submission(request):
+#     if request.method == 'POST':
+#         TaskSubmission_id = request.POST.get('TaskSubmission_id') # hidden field
+#         current_faculty = request.POST.get('current_faculty') # hidden field
+#         score = request.POST.get('score')
+#         feedback = request.POST.get('feedback')
 
-def manage_students(request):
-    student_from_db = User.objects.all()
-    context = {
-        'students': student_from_db,
-    }
-    return render(request, 'manage_students.html', context)
-
-def manage_faculty(request):
-    faculty_from_db = User.objects.all()
-    context = {
-        'faculty': faculty_from_db,
-    }
-    return render(request, 'manage_faculty.html', context)
+#         task_submission = TaskSubmission.objects.get(id=TaskSubmission_id)
+#         task_submission.user_faculty = User.objects.get(username = current_faculty)
+#         task_submission.score = score
+#         task_submission.feedback = feedback
+#         task_submission.save()
+#         return redirect('task_submission')
+#     context = {
+#         'tasks': Task.objects.all(),
+#     }
+#     return render(request, 'task_submission.html', context)
 
 def bulk_upload_faculty(request):
     if request.method == 'POST':

@@ -50,3 +50,36 @@ class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
         fields = ['name', 'code', 'description']
+
+class TaskSerializer(serializers.ModelSerializer):
+    course = serializers.UUIDField()
+    class Meta:
+        model = Task
+        fields = ['name', 'description', 'course']
+
+    def create(self, attrs):
+        name = attrs.get('name', None)
+        description = attrs.get('description', None)
+        course = attrs.get('course', None)
+
+        try:
+            course_id = Course.objects.get(id=course)
+            task = Task.objects.create(name=name, description=description, course=course_id)
+            return {
+                'id': task.id,
+                'name': task.name,
+                'description': task.description,
+                'course': task.course.id,
+                'course_name': task.course.name,
+            }
+        except Course.DoesNotExist:
+            raise Exception('Course does not exist.')
+
+class TaskSubmissionSerializer(serializers.ModelSerializer):
+    task = serializers.UUIDField()
+    user_student = serializers.CharField()
+    user_faculty = serializers.CharField()
+    file = serializers.FileField()
+    class Meta:
+        model = TaskSubmission
+        fields = ['task', 'user_student', 'file', 'user_faculty', 'score', 'feedback']

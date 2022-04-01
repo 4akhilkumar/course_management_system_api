@@ -51,6 +51,35 @@ Akira Project is an Course Management System
          "description": "In publishing and graphic design, Lorem ipsum is a placeholder text commonly used to demonstrate the visual form of a document or a typeface without relying on meaningful content."
       }
       ```
+* Upload the task submission to a course
+   * POST - ``` http://127.0.0.1:8000/api/course_task_submission/ ```
+      ### Headers
+         * Name: Content-Type
+         * Value: multipart/form-data
+      ### Body
+      ```Form [Name - Value]
+      task - <TASK_ID>
+      * task - bc6cd7b0-9ce9-4fb5-bd4c-e38444b502ec
+      file - <Upload file>
+      user_student - <USER_STUDENT_ID>
+      * user_student - 4 
+      ```
+      [Upload the task submission to a course](API Documentation files\Upload the task submission to a course.jpg)
+
+* Grade the task submission to a course
+   * POST - ``` http://127.0.0.1:8000/api/evaluate_submission/ ```
+      ### Headers
+         * Name: Content-Type
+         * Value: application/json
+      ### Body
+      ```
+      {
+         "task_submission_id": "f94bd04a-cca6-4195-b884-c1dfab7fca17",
+         "user_faculty": 3,
+         "score": 100,
+         "feedback": "Good work"
+      }
+      ```
 
 ## Sample data in JSON format
 

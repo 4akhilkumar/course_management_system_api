@@ -27,8 +27,8 @@ class Task(models.Model):
 class TaskSubmission(models.Model):
     id = models.UUIDField(primary_key=True, unique=True, default=uuid.uuid4, editable=False)
     task = models.ForeignKey(Task, on_delete=models.CASCADE)
-    user_student = models.ForeignKey(User, on_delete=models.CASCADE)
-    file = models.FileField(upload_to='uploads/')
+    user_student = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True)
+    file = models.FileField(upload_to='uploads/', blank=True, null=True)
     submitted_at = models.DateTimeField(auto_now_add=True)
     user_faculty = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='Instructor', blank=True, null=True)
     score = models.IntegerField(default=0, blank=True, null=True)
