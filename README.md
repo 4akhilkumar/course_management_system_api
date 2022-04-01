@@ -64,7 +64,7 @@ Akira Project is an Course Management System
       user_student - <USER_STUDENT_ID>
       * user_student - 4 
       ```
-      [Upload the task submission to a course](API Documentation files\Upload the task submission to a course.jpg)
+      ![Upload the task submission to a course](https://raw.githubusercontent.com/4akhilkumar/course_management_system_api/main/API%20Documentation%20files/Upload%20the%20task%20submission%20to%20a%20course.jpg?token=GHSAT0AAAAAABTDLBAQ323QCLN46J4ONLVOYSPWQWA)
 
 * Grade the task submission to a course
    * POST - ``` http://127.0.0.1:8000/api/evaluate_submission/ ```
