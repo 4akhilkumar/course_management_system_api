@@ -51,6 +51,28 @@ Akira Project is an Course Management System
          "description": "In publishing and graphic design, Lorem ipsum is a placeholder text commonly used to demonstrate the visual form of a document or a typeface without relying on meaningful content."
       }
       ```
+* Bulk upload faculty 
+  * POST - ``` http://127.0.0.1:8000/api/bulk_upload_faculty/ ```
+      ### Headers
+         * Name: Content-Type
+         * Value: multipart/form-data
+      ### Body
+      ```Form [Name - Value]
+      faculty_file - <Upload file>
+      ```
+      ![Upload the task submission to a course](https://raw.githubusercontent.com/4akhilkumar/course_management_system_api/main/API%20Documentation%20files/bulk_upload.jpg?token=GHSAT0AAAAAABTDLBARJD645AS3QBPSKDZYYSPXWZA)
+
+* Bulk upload students 
+  * POST - ``` http://127.0.0.1:8000/api/bulk_upload_students/ ```
+      ### Headers
+         * Name: Content-Type
+         * Value: multipart/form-data
+      ### Body
+      ```Form [Name - Value]
+      student_file - <Upload file>
+      ```
+      ![Upload the task submission to a course](https://raw.githubusercontent.com/4akhilkumar/course_management_system_api/main/API%20Documentation%20files/bulk_upload(2).jpg?token=GHSAT0AAAAAABTDLBARH2HYG43C7S5XTZGOYSPX2AQ)
+
 * Upload the task submission to a course
    * POST - ``` http://127.0.0.1:8000/api/course_task_submission/ ```
       ### Headers

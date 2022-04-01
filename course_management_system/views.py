@@ -1,6 +1,8 @@
+from email import message
 from django.contrib.auth.models import User, Group
 from django.http.response import JsonResponse
 from django.shortcuts import render, redirect
+from numpy import require
 
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -233,24 +235,7 @@ def evaluate_submission(request):
             message = "Task submission does not exist"
         return JsonResponse({'message': message}, status=status.HTTP_400_BAD_REQUEST)
 
-# def evaluate_submission(request):
-#     if request.method == 'POST':
-#         TaskSubmission_id = request.POST.get('TaskSubmission_id') # hidden field
-#         current_faculty = request.POST.get('current_faculty') # hidden field
-#         score = request.POST.get('score')
-#         feedback = request.POST.get('feedback')
-
-#         task_submission = TaskSubmission.objects.get(id=TaskSubmission_id)
-#         task_submission.user_faculty = User.objects.get(username = current_faculty)
-#         task_submission.score = score
-#         task_submission.feedback = feedback
-#         task_submission.save()
-#         return redirect('task_submission')
-#     context = {
-#         'tasks': Task.objects.all(),
-#     }
-#     return render(request, 'task_submission.html', context)
-
+@api_view(['POST'])
 def bulk_upload_faculty(request):
     if request.method == 'POST':
         faculty_from_db = User.objects.all()
@@ -259,7 +244,7 @@ def bulk_upload_faculty(request):
             faculty_user.append(i.username)
             faculty_user.append(i.email)
 
-        paramFile = io.TextIOWrapper(request.FILES['faculty_file'].file)
+        paramFile = io.TextIOWrapper(request.data['faculty_file'].file)
         data = pd.read_csv(paramFile)
         data.drop_duplicates(subset ="Username", keep = 'first', inplace = True)
 
@@ -272,9 +257,10 @@ def bulk_upload_faculty(request):
                     email=row['Email'],
                     password="AKIRAaccount@21",
                 )
-                group_name = row['Designation']
-                my_group = Group.objects.get(name='%s' % str(group_name))
+                group_name = "Faculty"
+                my_group, schema = Group.objects.get_or_create(name='%s' % str(group_name))
                 my_group.user_set.add(newuser)
+                my_group.save()
 
                 faculty = Faculty.objects.bulk_create([
                     Faculty(
@@ -282,10 +268,14 @@ def bulk_upload_faculty(request):
                         course = Course.objects.get(name = row['course_name']),
                     )
                 ])
-        return redirect('manage_faculty')
-    else:
-        return redirect('manage_faculty')
+                message = "Faculty uploaded successfully"
+                status_code = status.HTTP_200_OK
+            else:
+                message = "User already exists with this username or email"
+                status_code = status.HTTP_400_BAD_REQUEST
+        return JsonResponse({'message': message}, status=status_code)
 
+@api_view(['POST'])
 def bulk_upload_students(request):
     if request.method == 'POST':
         student_from_db = User.objects.all()
@@ -294,7 +284,7 @@ def bulk_upload_students(request):
             student_user.append(i.username)
             student_user.append(i.email)
 
-        paramFile = io.TextIOWrapper(request.FILES['student_file'].file)
+        paramFile = io.TextIOWrapper(request.data['student_file'].file)
         data = pd.read_csv(paramFile)
         data.drop_duplicates(subset ="Username", keep = 'first', inplace = True)
 
@@ -307,9 +297,10 @@ def bulk_upload_students(request):
                     email=row['Email'],
                     password="AKIRAaccount@21",
                 )
-                group_name = row['Designation']
-                my_group = Group.objects.get(name='%s' % str(group_name))
+                group_name = "Student"
+                my_group, schema = Group.objects.get_or_create(name='%s' % str(group_name))
                 my_group.user_set.add(newuser)
+                my_group.save()
 
                 student = Student.objects.bulk_create([
                     Student(
@@ -317,6 +308,9 @@ def bulk_upload_students(request):
                         course = Course.objects.get(name = row['course_name']),
                     )
                 ])
-        return redirect('manage_students')
-    else:
-        return redirect('manage_students')
+                message = "Students uploaded successfully"
+                status_code = status.HTTP_200_OK
+            else:
+                message = "User already exists with this username or email"
+                status_code = status.HTTP_400_BAD_REQUEST
+        return JsonResponse({'message': message}, status=status_code)

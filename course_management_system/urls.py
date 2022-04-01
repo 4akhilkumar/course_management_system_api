@@ -14,4 +14,6 @@ urlpatterns = [
     path('course_task/', views.course_task, name='course_task'),
     path('course_task_submission/', views.course_task_submission, name='course_task_submission'),
     path('evaluate_submission/', views.evaluate_submission, name='evaluate_submission'),
+    path('bulk_upload_faculty/', views.bulk_upload_faculty, name='bulk_upload_faculty'),
+    path('bulk_upload_students/', views.bulk_upload_students, name='bulk_upload_students'),
 ]
