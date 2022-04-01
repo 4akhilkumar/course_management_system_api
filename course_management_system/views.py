@@ -1,4 +1,3 @@
-from email import message
 from django.contrib.auth.models import User, Group
 from django.http.response import JsonResponse
 from django.shortcuts import render, redirect

@@ -17,18 +17,18 @@ Akira Project is an Course Management System
 9. To view on browser http://127.0.0.1:8000/ [Local Host Address]
 
 ## API Documentation
-* Display all courses
+### Display all courses
   * GET - ``` http://127.0.0.1:8000/api/courses/ ```
-* Delete all courses
+### Delete all courses
   * DELETE - ``` http://127.0.0.1:8000/api/courses/ ```
-* Delete a course by id
+### Delete a course by id
    * DELETE - ``` http://127.0.0.1:8000/api/courses/<course_id>/ ```
-* Create a course 
+### Create a course 
   * POST - ``` http://127.0.0.1:8000/api/courses/ ```
-      ### Headers
+      #### Headers
          * Name: Content-Type
          * Value: application/json
-      ### Body
+      #### Body
       ```JSON
       {
          "name": "Technical Skilling",
@@ -36,14 +36,14 @@ Akira Project is an Course Management System
          "description": "In publishing and graphic design, Lorem ipsum is a placeholder text commonly used to demonstrate the visual form of a document or a typeface without relying on meaningful content."
       }
       ```
-* Retrieve a single course by id
+### Retrieve a single course by id
    * GET - ``` http://127.0.0.1:8000/api/courses/<course_id>/ ```
-* Update a course by id
+### Update a course by id
    * PUT - ``` http://127.0.0.1:8000/api/courses/<course_id>/ ```
-      ### Headers
+      #### Headers
          * Name: Content-Type
          * Value: application/json
-      ### Body
+      #### Body
       ```JSON
       {
          "name": "Technical Skilling-2",
@@ -51,75 +51,75 @@ Akira Project is an Course Management System
          "description": "In publishing and graphic design, Lorem ipsum is a placeholder text commonly used to demonstrate the visual form of a document or a typeface without relying on meaningful content."
       }
       ```
-* Bulk upload faculty 
+### Bulk upload faculty 
   * POST - ``` http://127.0.0.1:8000/api/bulk_upload_faculty/ ```
-      ### Headers
+      #### Headers
          * Name: Content-Type
          * Value: multipart/form-data
-      ### Body
+      #### Body
       ```Form [Name - Value]
       faculty_file - <Upload file>
       ```
       ![Upload the task submission to a course](https://raw.githubusercontent.com/4akhilkumar/course_management_system_api/main/API%20Documentation%20files/bulk_upload.jpg?token=GHSAT0AAAAAABTDLBARJD645AS3QBPSKDZYYSPXWZA)
 
-* Bulk faculty course registration 
+### Bulk faculty course registration 
   * POST - ``` http://127.0.0.1:8000/api/bulk_faculty_reg_course/ ```
-      ### Headers
+      #### Headers
          * Name: Content-Type
          * Value: multipart/form-data
-      ### Body
+      #### Body
       ```Form [Name - Value]
       faculty_file - <Upload file>
       ```
 
-* Bulk upload students 
+### Bulk upload students 
   * POST - ``` http://127.0.0.1:8000/api/bulk_upload_students/ ```
-      ### Headers
+      #### Headers
          * Name: Content-Type
          * Value: multipart/form-data
-      ### Body
+      #### Body
       ```Form [Name - Value]
       student_file - <Upload file>
       ```
       ![Upload the task submission to a course](https://raw.githubusercontent.com/4akhilkumar/course_management_system_api/main/API%20Documentation%20files/bulk_upload(2).jpg?token=GHSAT0AAAAAABTDLBARH2HYG43C7S5XTZGOYSPX2AQ)
 
-* Bulk student course registration 
+### Bulk student course registration 
   * POST - ``` http://127.0.0.1:8000/api/bulk_students_reg_course/ ```
-      ### Headers
+      #### Headers
          * Name: Content-Type
          * Value: multipart/form-data
-      ### Body
+      #### Body
       ```Form [Name - Value]
       student_file - <Upload file>
       ```
 
-* Get courses registered by a faculty by id
+### Get courses registered by a faculty by id
    * GET - ``` http://127.0.0.1:8000/api/get_faculty_registered_courses/<faculty_id>/ ```
 
-* Get courses registered by a student by id
+### Get courses registered by a student by id
    * GET - ``` http://127.0.0.1:8000/api/get_student_registered_courses/<student_id>/ ```
 
-* Upload the task submission to a course
+### Upload the task submission to a course
    * POST - ``` http://127.0.0.1:8000/api/course_task_submission/ ```
-      ### Headers
+      #### Headers
          * Name: Content-Type
          * Value: multipart/form-data
-      ### Body
+      #### Body
       ```Form [Name - Value]
       task - <TASK_ID>
-      * task - bc6cd7b0-9ce9-4fb5-bd4c-e38444b502ec
+      * E.g: task - bc6cd7b0-9ce9-4fb5-bd4c-e38444b502ec
       file - <Upload file>
       user_student - <USER_STUDENT_ID>
-      * user_student - 4 
+      * E.g: user_student - 4 
       ```
       ![Upload the task submission to a course](https://raw.githubusercontent.com/4akhilkumar/course_management_system_api/main/API%20Documentation%20files/Upload%20the%20task%20submission%20to%20a%20course.jpg?token=GHSAT0AAAAAABTDLBAQ323QCLN46J4ONLVOYSPWQWA)
 
-* Grade the task submission to a course
+### Grade the task submission to a course
    * POST - ``` http://127.0.0.1:8000/api/evaluate_submission/ ```
-      ### Headers
+      #### Headers
          * Name: Content-Type
          * Value: application/json
-      ### Body
+      #### Body
       ```
       {
          "task_submission_id": "f94bd04a-cca6-4195-b884-c1dfab7fca17",
@@ -129,7 +129,7 @@ Akira Project is an Course Management System
       }
       ```
 
-## Sample data in JSON format
+### Sample data in JSON format
 
 ```JSON
 [
