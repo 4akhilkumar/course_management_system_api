@@ -90,7 +90,7 @@ Akira Project is an Course Management System
          * Value: multipart/form-data
       ### Body
       ```Form [Name - Value]
-      faculty_file - <Upload file>
+      student_file - <Upload file>
       ```
 
 * Upload the task submission to a course
