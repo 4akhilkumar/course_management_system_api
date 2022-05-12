@@ -216,6 +216,29 @@ def get_student_registered_courses(request, student_id):
         else:
             return JsonResponse({'message': 'User does not exist'}, status=status.HTTP_404_NOT_FOUND)
 
+@api_view(['GET'])
+def getTasksbyCourse(request, course_id):
+    if request.method =="GET":
+        try:
+            courseObj = Course.objects.get(id = course_id)
+        except Course.DoesNotExist:
+            return JsonResponse({'message': 'Course does not exist'}, status=status.HTTP_404_NOT_FOUND)
+
+        if courseObj is not None:
+            tasks = Task.objects.filter(course = courseObj)
+            task_serializer = TaskSerializer(tasks, many = True)
+            DRF = task_serializer.data
+            json_data = json.dumps(DRF)
+            parsed_json = json.loads(json_data)
+            dict = []
+            for task in parsed_json:
+                eachTask = task['task']
+                dict.append(eachTask)
+            return JsonResponse(dict, safe=False)
+        else:
+            return JsonResponse({'message': 'Course does not exist'}, status=status.HTTP_404_NOT_FOUND)
+
+
 @api_view(['POST'])
 def course_task(request):
     if request.method == 'POST':
