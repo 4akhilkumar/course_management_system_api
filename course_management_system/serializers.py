@@ -60,7 +60,7 @@ class TaskSerializer(serializers.ModelSerializer):
     course = serializers.UUIDField()
     class Meta:
         model = Task
-        fields = ['name', 'description', 'course']
+        fields = ['id', 'name', 'description', 'course']
 
     def create(self, attrs):
         name = attrs.get('name', None)
@@ -87,7 +87,7 @@ class TaskSubmissionSerializer(serializers.ModelSerializer):
     file = serializers.FileField()
     class Meta:
         model = TaskSubmission
-        fields = ['task', 'user_student', 'file', 'user_faculty', 'score', 'feedback']
+        fields = ['id', 'task', 'user_student', 'file', 'user_faculty', 'score', 'feedback']
 
 class FacultyRegCourseSerializer(serializers.ModelSerializer): 
     course = CourseSerializerID()
