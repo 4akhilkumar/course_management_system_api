@@ -230,11 +230,30 @@ def getTasksbyCourse(request, course_id):
             DRF = task_serializer.data
             json_data = json.dumps(DRF)
             parsed_json = json.loads(json_data)
-            dict = []
-            for task in parsed_json:
-                eachTask = task['task']
-                dict.append(eachTask)
-            return JsonResponse(dict, safe=False)
+            # print(parsed_json)
+            # for each in parsed_json:
+            #     print(each['id'])
+            # getTaskSubmissions = TaskSubmission.objects.filter(task = tasks)
+
+            return JsonResponse(parsed_json, safe=False)
+        else:
+            return JsonResponse({'message': 'Course does not exist'}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['GET'])
+def getSubmittedTasksbyCourse(request, course_id):
+    if request.method =="GET":
+        try:
+            courseObj = Course.objects.get(id = course_id)
+        except Course.DoesNotExist:
+            return JsonResponse({'message': 'Course does not exist'}, status=status.HTTP_404_NOT_FOUND)
+
+        if courseObj is not None:
+            tasks = TaskSubmission.objects.filter(task__course = courseObj, file__isnull = False)
+            task_serializer = TaskSubmissionSerializer(tasks, many = True)
+            DRF = task_serializer.data
+            json_data = json.dumps(DRF)
+            parsed_json = json.loads(json_data)
+            return JsonResponse(parsed_json, safe=False)
         else:
             return JsonResponse({'message': 'Course does not exist'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -293,14 +312,22 @@ def course_task_submission(request):
                         file = submission_file,
                     )
                     taskSubmission_serializer = TaskSubmissionSerializer(taskSubmissionObj) 
-                    return JsonResponse(taskSubmission_serializer.data)
+                    return JsonResponse({
+                        'success': 'true',
+                        'status_code': status.HTTP_200_OK,
+                        'message': 'Task Submitted Successfully',
+                    })
                 else:
                     message = 'You already submitted this task'
             else:
                 message = "User does not exist"
         else:
             message = "Task does not exist"
-        return JsonResponse({'message': message}, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({
+            'success': 'false',
+            'status_code': status.HTTP_400_BAD_REQUEST,
+            'message': message,
+        })
 
 @api_view(['POST'])
 def evaluate_submission(request):
@@ -310,9 +337,9 @@ def evaluate_submission(request):
         feedback = request.data['feedback']
         if TaskSubmission.objects.filter(id = task_submission_id).exists() is True:
             taskSubObj = TaskSubmission.objects.get(id = task_submission_id)
-            faculty_id = request.data['user_faculty']
-            if User.objects.filter(id = faculty_id).exists() is True:
-                current_faculty = User.objects.get(id = faculty_id)
+            faculty_username = request.data['user_faculty']
+            if User.objects.filter(username = faculty_username).exists() is True:
+                current_faculty = User.objects.get(username = faculty_username)
                 if TaskSubmission.objects.filter(id = task_submission_id, user_faculty = current_faculty).exists() is False:
                     taskSubmissionObj = taskSubObj
                     taskSubmissionObj.user_faculty = current_faculty
