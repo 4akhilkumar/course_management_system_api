@@ -102,6 +102,9 @@ Akira Project is an Course Management System
 ### Get task by course id
    * GET - ``` http://127.0.0.1:8000/api/getTasksbyCourse/<course_id>/ ```
 
+### Get task submission by task id & student id
+   * GET - ``` http://127.0.0.1:8000/api/getSubmissionsbyTaskID/<task_id>/<student_id>/ ```
+
 ### Upload the task submission to a course
    * POST - ``` http://127.0.0.1:8000/api/course_task_submission/ ```
       #### Headers
@@ -126,7 +129,7 @@ Akira Project is an Course Management System
       ```
       {
          "task_submission_id": "f94bd04a-cca6-4195-b884-c1dfab7fca17",
-         "user_faculty": 3,
+         "user_faculty": <username>,
          "score": 100,
          "feedback": "Good work"
       }

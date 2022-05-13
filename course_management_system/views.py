@@ -238,6 +238,33 @@ def getTasksbyCourse(request, course_id):
         else:
             return JsonResponse({'message': 'Course does not exist'}, status=status.HTTP_404_NOT_FOUND)
 
+@api_view(['GET'])
+def getSubmissionsbyTaskID(request, task_id, student_id):
+    if request.method =="GET":
+        try:
+            taskObj = Task.objects.get(id = task_id)
+        except Task.DoesNotExist:
+            return JsonResponse({'message': 'Task does not exist'}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            userObj = User.objects.get(id = student_id)
+        except User.DoesNotExist:
+            return JsonResponse({'message': 'User does not exist'}, status=status.HTTP_404_NOT_FOUND)
+        
+        try:
+            if taskObj is not None:
+                taskSubObj = TaskSubmission.objects.filter(task = taskObj, user_student = userObj)
+                task_sub_serializer = TaskSubmissionSerializer(taskSubObj, many = True)
+                DRF = task_sub_serializer.data
+                json_data = json.dumps(DRF)
+                parsed_json = json.loads(json_data)
+                return JsonResponse(parsed_json, safe=False)
+            else:
+                return JsonResponse({'message': 'Task does not exist'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            print(e)
+            return JsonResponse({'message': 'User does not exist'}, status=status.HTTP_404_NOT_FOUND)
+
 
 @api_view(['POST'])
 def course_task(request):

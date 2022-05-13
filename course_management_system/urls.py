@@ -15,6 +15,7 @@ urlpatterns = [
     path('get_student_registered_courses/<int:student_id>/', views.get_student_registered_courses),
 
     path('getTasksbyCourse/<uuid:course_id>/', views.getTasksbyCourse),
+    path('getSubmissionsbyTaskID/<uuid:task_id>/<int:student_id>/', views.getSubmissionsbyTaskID),
     path('course_task/', views.course_task, name='course_task'),
     path('course_task_submission/', views.course_task_submission, name='course_task_submission'),
     path('evaluate_submission/', views.evaluate_submission, name='evaluate_submission'),
