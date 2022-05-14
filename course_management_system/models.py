@@ -47,7 +47,7 @@ class CourseAdmin(models.Model):
 class Faculty(models.Model):
     id = models.UUIDField(primary_key=True, unique=True, default=uuid.uuid4, editable=False)
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    gender = models.CharField(max_length=10)
+    gender = models.CharField(max_length=10, default="")
 
     def __str__(self):
         return self.user.username
@@ -55,7 +55,7 @@ class Faculty(models.Model):
 class Student(models.Model):
     id = models.UUIDField(primary_key=True, unique=True, default=uuid.uuid4, editable=False)
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    gender = models.CharField(max_length=10)
+    gender = models.CharField(max_length=10, default="")
 
     def __str__(self):
         return self.user.username
