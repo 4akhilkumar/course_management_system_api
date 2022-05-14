@@ -82,12 +82,13 @@ class TaskSerializer(serializers.ModelSerializer):
 
 class TaskSubmissionSerializer(serializers.ModelSerializer):
     task = serializers.UUIDField()
+    task__id = serializers.UUIDField(source='task.id')
     user_student = serializers.CharField()
     user_faculty = serializers.CharField()
     file = serializers.FileField()
     class Meta:
         model = TaskSubmission
-        fields = ['id', 'task', 'user_student', 'file', 'user_faculty', 'score', 'feedback']
+        fields = ['id', 'task', 'task__id', 'user_student', 'file', 'user_faculty', 'score', 'feedback']
 
 class FacultyRegCourseSerializer(serializers.ModelSerializer): 
     course = CourseSerializerID()
